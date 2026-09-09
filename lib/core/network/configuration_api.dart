@@ -6,7 +6,7 @@ abstract final class ConfigurationApi {
 
   static const urlBase = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://camping-overwrite-upstate.ngrok-free.dev',
+    defaultValue: ' ',
   );
 
   static const dureeExpiration = Duration(seconds: 30);
