@@ -33,7 +33,7 @@ class _MainShellState extends State<MainShell> {
           setState(() => _afficherBarreNavigation = visible);
         },
       ),
-      const JournalPage(),
+      JournalPage(estActif: _currentIndex == 2),
       const ProfilePage(),
     ];
 

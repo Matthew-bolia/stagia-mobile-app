@@ -9,6 +9,11 @@ import 'home_premiere_connexion_page.dart';
 import 'home_shared_widgets.dart';
 import 'home_stage_actif_page.dart';
 
+const Map<String, String> _superviseurSimule = {
+  'id': 'superviseur-local-001',
+  'nom': 'Dr Jean Mbala',
+};
+
 class HomePage extends StatefulWidget {
   const HomePage({this.onOuvrirStages, super.key});
 
@@ -113,7 +118,10 @@ class _HomePageState extends State<HomePage> {
       }
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: EnTeteAccueil(etudiant: etudiant),
+        appBar: EnTeteAccueil(
+          etudiant: etudiant,
+          superviseur: _superviseurActuel(donnees),
+        ),
         body: ContenuAdaptatif(
           enfant: snapshot.connectionState == ConnectionState.waiting
               ? const Center(
@@ -134,6 +142,61 @@ class _HomePageState extends State<HomePage> {
       );
     },
   );
+
+  Map<String, String>? _superviseurActuel(Map<String, dynamic> donnees) {
+    final stage = mapApi(donnees['current_stage']);
+    if (stage.isEmpty) return _superviseurSimule;
+
+    final rotations = listeApi(
+      stage['rotations'] ??
+          stage['rotation_items'] ??
+          mapApi(stage['parcours'])['rotations'],
+    );
+    final rotation = rotations.isEmpty
+        ? const <String, dynamic>{}
+        : rotations.first;
+    final objets = [
+      mapApi(stage['supervisor']),
+      mapApi(stage['superviseur']),
+      mapApi(rotation['supervisor']),
+      mapApi(rotation['superviseur']),
+    ];
+
+    String premier(List<Object?> valeurs) {
+      for (final valeur in valeurs) {
+        if (valeur is Map || valeur is Iterable) continue;
+        final texte = valeur?.toString().trim() ?? '';
+        if (texte.isNotEmpty && texte != 'null') return texte;
+      }
+      return '';
+    }
+
+    final id = premier([
+      stage['supervisor_id'],
+      stage['superviseur_id'],
+      rotation['supervisor_id'],
+      rotation['superviseur_id'],
+      for (final objet in objets) objet['uuid'],
+      for (final objet in objets) objet['id'],
+    ]);
+    final nom = premier([
+      stage['supervisor_name'],
+      stage['superviseur_name'],
+      stage['supervisor'],
+      stage['superviseur'],
+      rotation['supervisor_name'],
+      rotation['superviseur_name'],
+      rotation['supervisor'],
+      rotation['superviseur'],
+      for (final objet in objets) objet['name'],
+      for (final objet in objets) objet['nom_complet'],
+    ]);
+    if (nom.isEmpty) return _superviseurSimule;
+    return {
+      'id': id.isEmpty ? 'nom-${Uri.encodeComponent(nom.toLowerCase())}' : id,
+      'nom': nom,
+    };
+  }
 
   Widget _interfaceAccueil({
     required Map<String, dynamic> donnees,

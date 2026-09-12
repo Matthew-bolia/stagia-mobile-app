@@ -21,77 +21,7 @@ class HomePremiereConnexionPage extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(marge, 16, marge, 28),
       children: [
-        Container(
-          height: 164,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: modeSombre ? Colors.white : const Color(0xFF111111),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x10000000),
-                blurRadius: 16,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 5,
-                child: SizedBox(
-                  height: 120,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Image.asset(
-                      'assets/icons/welcome.png',
-                      width: 144,
-                      height: 120,
-                      fit: BoxFit.contain,
-                      alignment: Alignment.centerLeft,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                flex: 6,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bienvenue dans STAGIA',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        color: modeSombre ? Colors.black : Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Votre espace est prêt. Consultez les campagnes publiées par votre université.',
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        color: modeSombre
-                            ? const Color(0xFF4B5563)
-                            : const Color(0xFFCACACA),
-                        fontSize: 11.5,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        _CarteBienvenuePremiereConnexion(modeSombre: modeSombre),
         const SizedBox(height: 22),
         const Text(
           'Votre parcours de stage',
@@ -128,6 +58,153 @@ class HomePremiereConnexionPage extends StatelessWidget {
       ],
     );
   }
+}
+
+class _CarteBienvenuePremiereConnexion extends StatelessWidget {
+  const _CarteBienvenuePremiereConnexion({required this.modeSombre});
+
+  final bool modeSombre;
+
+  @override
+  Widget build(BuildContext context) {
+    final fond = modeSombre ? const Color(0xFFFFCAA7) : const Color(0xFF050505);
+    final couleurTexte = modeSombre ? Colors.black : Colors.white;
+    final couleurCercle = modeSombre
+        ? const Color(0xFFFF9D61)
+        : const Color(0xFF5B2708);
+
+    return Container(
+      height: 170,
+      decoration: BoxDecoration(
+        color: fond,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.black, width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26000000),
+            blurRadius: 14,
+            offset: Offset(0, 7),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(21),
+        child: Stack(
+          children: [
+            _CercleDecoratif(
+              couleur: couleurCercle,
+              taille: 58,
+              haut: -14,
+              gauche: -17,
+            ),
+            _CercleDecoratif(
+              couleur: couleurCercle,
+              taille: 92,
+              bas: -38,
+              gauche: 62,
+            ),
+            _CercleDecoratif(
+              couleur: couleurCercle,
+              taille: 72,
+              haut: -30,
+              droite: 58,
+            ),
+            _CercleDecoratif(
+              couleur: couleurCercle,
+              taille: 40,
+              bas: 17,
+              droite: 82,
+            ),
+            Positioned(
+              left: 3,
+              bottom: -6,
+              width: 230, // Réduction de la taille du personnage
+              height: 370,
+              child: Image.asset(
+                'assets/icons/welcome.png',
+                fit: BoxFit.contain,
+                alignment: Alignment.bottomCenter,
+              ),
+            ),
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(130, 16, 12, 16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Bienvenue dans STAGIA',
+                          maxLines: 1,
+                          softWrap: false,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: couleurTexte,
+                            fontFamily: 'Georgia',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Votre espace est prêt. Consultez les campagnes publiées par votre université',
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: couleurTexte,
+                        fontFamily: 'Georgia',
+                        fontSize: 12,
+                        height: 1.45,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CercleDecoratif extends StatelessWidget {
+  const _CercleDecoratif({
+    required this.couleur,
+    required this.taille,
+    this.haut,
+    this.bas,
+    this.gauche,
+    this.droite,
+  });
+
+  final Color couleur;
+  final double taille;
+  final double? haut;
+  final double? bas;
+  final double? gauche;
+  final double? droite;
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    top: haut,
+    bottom: bas,
+    left: gauche,
+    right: droite,
+    child: Container(
+      width: taille,
+      height: taille,
+      decoration: BoxDecoration(color: couleur, shape: BoxShape.circle),
+    ),
+  );
 }
 
 class _ParcoursDebutant extends StatelessWidget {

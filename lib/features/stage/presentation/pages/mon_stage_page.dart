@@ -8,6 +8,7 @@ import '../../../../core/network/telechargeur_document_api.dart';
 import '../../../../core/widgets/contenu_adaptatif.dart';
 import '../../../../core/widgets/erreur_chargement_api.dart';
 import '../widgets/onglets_stage.dart';
+import 'suivi_formation_pages.dart';
 
 class MonStagePage extends StatefulWidget {
   const MonStagePage({super.key});
@@ -27,10 +28,8 @@ class _MonStagePageState extends State<MonStagePage> {
     _chargement = _charger();
   }
 
-  Future<List<Map<String, dynamic>>> _charger() => Future.wait([
-    _source.stages(),
-    _source.documents(),
-  ]);
+  Future<List<Map<String, dynamic>>> _charger() =>
+      Future.wait([_source.stages(), _source.documents()]);
 
   Future<void> _actualiser() async {
     final futur = _charger();
@@ -141,76 +140,209 @@ class _ContenuStage extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.fromLTRB(marge, 12, marge, 28),
         children: [
-          if (stage == null)
-            const _Vide('Aucun stage affecté.')
-          else ...[
-            const _TitreSection(
-              titre: 'Stage actuel',
-              description: 'Affectation et informations administratives',
-            ),
-            const SizedBox(height: 12),
-            _BlocFiche(
-              lignes: [
-                _DonneeFiche(
-                  'Statut',
-                  '${stage!['workflow_status'] ?? stage!['statut'] ?? '-'}',
+          _CarteRubriqueStage(
+            titre: 'Mon stage',
+            enfants: [
+              if (stage == null)
+                const _Vide('Aucun stage affecté.')
+              else ...[
+                const _TitreSection(
+                  titre: 'Stage actuel',
+                  description: 'Affectation et informations administratives',
                 ),
-                _DonneeFiche(
-                  'Établissement',
-                  '${stage!['hospital_name'] ?? '-'}',
+                const SizedBox(height: 12),
+                _BlocFiche(
+                  lignes: [
+                    _DonneeFiche(
+                      'Statut',
+                      '${stage!['workflow_status'] ?? stage!['statut'] ?? '-'}',
+                    ),
+                    _DonneeFiche(
+                      'Établissement',
+                      '${stage!['hospital_name'] ?? '-'}',
+                    ),
+                    _DonneeFiche(
+                      'Campagne',
+                      '${stage!['campaign_title'] ?? '-'}',
+                    ),
+                    _DonneeFiche(
+                      'Groupe',
+                      '${stage!['group_name'] ?? stage!['groupe'] ?? '-'}',
+                    ),
+                    _DonneeFiche(
+                      'Période',
+                      '${stage!['date_debut'] ?? '-'} au ${stage!['date_fin'] ?? '-'}',
+                    ),
+                  ],
                 ),
-                _DonneeFiche(
-                  'Campagne',
-                  '${stage!['campaign_title'] ?? '-'}',
+                const SizedBox(height: 18),
+                const _TitreSection(
+                  titre: 'Services et rotations',
+                  description: 'Parcours publié pour ce stage',
                 ),
-                _DonneeFiche(
-                  'Groupe',
-                  '${stage!['group_name'] ?? stage!['groupe'] ?? '-'}',
-                ),
-                _DonneeFiche(
-                  'Période',
-                  '${stage!['date_debut'] ?? '-'} au ${stage!['date_fin'] ?? '-'}',
-                ),
+                const SizedBox(height: 12),
+                if (rotations.isEmpty)
+                  const _Vide('Aucun parcours de rotation publié.')
+                else
+                  for (var index = 0; index < rotations.length; index++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _CarteServiceRotation(
+                        rotation: rotations[index],
+                        numero: index + 1,
+                      ),
+                    ),
               ],
-            ),
-            const SizedBox(height: 18),
-            const _TitreSection(
-              titre: 'Services et rotations',
-              description: 'Parcours publié pour ce stage',
-            ),
-            const SizedBox(height: 12),
-            if (rotations.isEmpty)
-              const _Vide('Aucun parcours de rotation publié.')
-            else
-              for (var index = 0; index < rotations.length; index++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _CarteServiceRotation(
-                    rotation: rotations[index],
-                    numero: index + 1,
-                  ),
-                ),
-          ],
-          const SizedBox(height: 22),
-          const _TitreSection(
-            titre: 'Documents du stage',
-            description: 'Documents transmis et disponibles',
+            ],
           ),
-          const SizedBox(height: 12),
-          if (documents.isEmpty)
-            const _Vide('Aucun document disponible.')
-          else
-            for (final document in documents)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _CarteDocument(
-                  document: document,
-                  chargement: documentEnCours == document['uuid']?.toString(),
-                  onOuvrir: () => onDocument(document),
-                ),
-              ),
+          const SizedBox(height: 22),
+          _CarteRubriqueStage(
+            titre: 'Formation et accompagnement',
+            enfants: [_AccesFormation(stage: stage)],
+          ),
+          const SizedBox(height: 22),
+          _CarteRubriqueStage(
+            titre: 'Documents du stage',
+            enfants: [
+              if (documents.isEmpty)
+                const _Vide('Aucun document disponible.')
+              else
+                for (final document in documents)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _CarteDocument(
+                      document: document,
+                      chargement:
+                          documentEnCours == document['uuid']?.toString(),
+                      onOuvrir: () => onDocument(document),
+                    ),
+                  ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _CarteRubriqueStage extends StatelessWidget {
+  const _CarteRubriqueStage({required this.titre, required this.enfants});
+  final String titre;
+  final List<Widget> enfants;
+
+  @override
+  Widget build(BuildContext context) {
+    final couleurs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: couleurs.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: couleurs.onSurface.withValues(alpha: .35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            titre,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 16),
+          ...enfants,
+        ],
+      ),
+    );
+  }
+}
+
+class _AccesFormation extends StatelessWidget {
+  const _AccesFormation({required this.stage});
+  final Map<String, dynamic>? stage;
+
+  @override
+  Widget build(BuildContext context) {
+    final nom = stage?['campaign_title']?.toString() ?? 'Mon stage';
+    final pages = <(String, String, Widget)>[
+      (
+        'Plan de formation',
+        'Le programme par semaine ou par mois',
+        PlanFormationPage(stage: nom),
+      ),
+      (
+        'Planning de rotation',
+        'Les horaires et les tâches prévues',
+        PlanningRotationPage(stage: nom),
+      ),
+      (
+        'Tâches assignées',
+        'Les consignes et le suivi de vos travaux',
+        TachesFormationPage(stage: nom),
+      ),
+      (
+        'Feedback de superviseur',
+        'Les observations et les recommandations',
+        RetoursSuperviseurPage(stage: nom),
+      ),
+    ];
+    final couleurs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (stage == null)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: Text(
+              'Vous pouvez consulter ces rubriques. Leur contenu sera disponible après votre affectation et sa publication par le responsable.',
+            ),
+          ),
+        for (final page in pages)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: couleurs.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+                side: BorderSide(
+                  color: couleurs.onSurface.withValues(alpha: .35),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).push(MaterialPageRoute<void>(builder: (_) => page.$3)),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        page.$1,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: couleurs.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        page.$2,
+                        style: TextStyle(color: couleurs.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Consulter',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -228,10 +360,10 @@ class _CarteServiceRotation extends StatelessWidget {
         rotation['unit_name'] ??
         rotation['service'] ??
         'Service $numero';
-    final encadreur =
+    final superviseur =
         rotation['supervisor_name'] ??
-        rotation['encadreur_name'] ??
-        rotation['encadreur'] ??
+        rotation['superviseur_name'] ??
+        rotation['superviseur'] ??
         '-';
     final debut = rotation['date_debut'] ?? rotation['start_date'] ?? '-';
     final fin = rotation['date_fin'] ?? rotation['end_date'] ?? '-';
@@ -256,16 +388,15 @@ class _CarteServiceRotation extends StatelessWidget {
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 14),
-          _LigneService(libelle: 'Encadreur', valeur: encadreur.toString()),
+          _LigneService(libelle: 'Superviseur', valeur: superviseur.toString()),
           const SizedBox(height: 9),
           _LigneService(libelle: 'Période', valeur: '$debut au $fin'),
           const SizedBox(height: 14),
           Divider(
             height: 1,
-            color: Theme.of(context)
-                .colorScheme
-                .outlineVariant
-                .withValues(alpha: .45),
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: .45),
           ),
           const SizedBox(height: 12),
           _LigneService(

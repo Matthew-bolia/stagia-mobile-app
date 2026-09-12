@@ -153,10 +153,9 @@ class _ChampAcademique extends StatelessWidget {
     required this.controleur,
     required this.libelle,
     this.indication,
-    this.aide,
-    this.lectureSeule = false,
     this.obligatoire = false,
-  });
+  }) : lectureSeule = false,
+       aide = null;
   final double largeur;
   final TextEditingController controleur;
   final String libelle;

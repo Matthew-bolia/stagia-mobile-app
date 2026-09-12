@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
+
   @override
   State<NotificationsPage> createState() => _NotificationsPageState();
 }
@@ -9,130 +11,141 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage> {
   final List<_NotificationLocale> _notifications = [
     _NotificationLocale(
-      titre: 'Candidature enregistrée',
-      message: 'Votre candidature a bien été transmise.',
-      date: 'Aujourd’hui · 10:24',
+      titre: 'Affectation de stage',
+      message: 'Vous êtes affecté au stage de l\'hôpital de Kinshasa.',
+      date: 'il y a 1h',
+      type: _TypeNotification.security,
+      lue: false,
     ),
     _NotificationLocale(
-      titre: 'Nouvelle tâche attribuée',
-      message: 'Une nouvelle tâche est disponible dans votre journal.',
-      date: 'Hier · 15:40',
+      titre: 'Rotation de stage',
+      message:
+          'Vous êtes affecté à la rotation de stage du service de chirurgie.',
+      date: 'il y a 3h',
+      type: _TypeNotification.security,
+      lue: true,
     ),
     _NotificationLocale(
-      titre: 'Rapport à corriger',
-      message: 'Votre encadreur a ajouté une observation sur le rapport.',
-      date: '26 août · 09:15',
+      titre: 'Paiement de stage',
+      message: 'Votre paiement de stage a été effectué avec succès.',
+      date: 'il y a 1j',
+      type: _TypeNotification.promo,
+      lue: false,
     ),
   ];
 
-  void _marquerCommeLue(int index) {
-    setState(() => _notifications[index].lue = true);
-  }
-
-  void _toutMarquerCommeLu() {
-    setState(() {
-      for (final notification in _notifications) {
-        notification.lue = true;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final marge = MediaQuery.sizeOf(context).width < 360 ? 14.0 : 18.0;
-    final nonLues = _notifications.where((element) => !element.lue).length;
     return Scaffold(
+      backgroundColor: const Color(0xFFEDEDEE),
       appBar: AppBar(
         title: const Text(
           'Notifications',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
-        actions: [
-          if (nonLues > 0)
-            TextButton(
-              onPressed: _toutMarquerCommeLu,
-              child: const Text('Tout lire'),
-            ),
-        ],
+        centerTitle: false,
       ),
-      body: _notifications.isEmpty
-          ? const Center(child: Text('Aucune notification.'))
-          : ListView.separated(
-              padding: EdgeInsets.fromLTRB(marge, 12, marge, 28),
-              itemCount: _notifications.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final notification = _notifications[index];
-                return Card(
-                  color: notification.lue
-                      ? Colors.white
-                      : const Color(0xFFFFF3EB),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: notification.lue
-                              ? const Color(0xFFF1F3F6)
-                              : const Color(0xFFFFE3D1),
-                          child: Icon(
-                            Icons.notifications_rounded,
-                            color: notification.lue
-                                ? const Color(0xFF718096)
-                                : const Color(0xFFE85D00),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                notification.titre,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(notification.message),
-                              const SizedBox(height: 7),
-                              Text(
-                                notification.date,
-                                style: const TextStyle(
-                                  color: Color(0xFF718096),
-                                  fontSize: 12,
-                                ),
-                              ),
-                              if (!notification.lue)
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: () => _marquerCommeLue(index),
-                                    child: const Text('Marquer comme lue'),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+      body: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+        itemCount: _notifications.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final notification = _notifications[index];
+          return _CarteNotification(notification: notification);
+        },
+      ),
     );
   }
 }
+
+class _CarteNotification extends StatelessWidget {
+  const _CarteNotification({required this.notification});
+
+  final _NotificationLocale notification;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFCCD0D7), width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .08),
+            blurRadius: 7,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: const Color(0xFFDBEAFE),
+            child: const FaIcon(
+              FontAwesomeIcons.bell,
+              color: Color(0xFF1D4ED8),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  notification.titre,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF202124),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  notification.message,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFF53616F),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  notification.date,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFF53616F),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _TypeNotification { security, promo, subscription, follower }
 
 class _NotificationLocale {
   _NotificationLocale({
     required this.titre,
     required this.message,
     required this.date,
-  }) : lue = false;
+    required this.type,
+    this.lue = false,
+  });
+
   final String titre;
   final String message;
   final String date;
-  bool lue;
+  final _TypeNotification type;
+  final bool lue;
 }

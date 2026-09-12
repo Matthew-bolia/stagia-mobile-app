@@ -208,13 +208,12 @@ class _Champ extends StatelessWidget {
     required this.controleur,
     required this.libelle,
     this.indication,
-    this.aide,
     this.clavier,
     this.lignes = 1,
     this.lectureSeule = false,
     this.obligatoire = false,
     this.onTap,
-  });
+  }) : aide = null;
   final double largeur;
   final TextEditingController controleur;
   final String libelle;

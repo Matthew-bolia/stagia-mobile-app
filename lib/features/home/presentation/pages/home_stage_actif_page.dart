@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'home_shared_widgets.dart';
 
 class HomeStageActifPage extends StatelessWidget {
@@ -172,9 +173,10 @@ class _CarteStage extends StatelessWidget {
               const SizedBox(height: 18),
               Row(
                 children: [
-                  const Icon(
-                    Icons.access_time_rounded,
+                  const FaIcon(
+                    FontAwesomeIcons.calendarDays,
                     color: Color(0xFF718096),
+                    size: 16,
                   ),
                   const SizedBox(width: 9),
                   Text(

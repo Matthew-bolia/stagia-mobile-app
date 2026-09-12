@@ -269,7 +269,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   titre: 'SUPPORT',
                   enfants: [
                     _ElementMenu(
-                    icone: FontAwesomeIcons.fileLines,
+                      icone: FontAwesomeIcons.fileLines,
                       titre: 'Conditions d’utilisation',
                       onTap: () => _ouvrirPage(
                         'Conditions d’utilisation',
@@ -277,7 +277,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     _ElementMenu(
-                    icone: FontAwesomeIcons.shieldHalved,
+                      icone: FontAwesomeIcons.shieldHalved,
                       titre: 'Politique de confidentialité',
                       onTap: () => _ouvrirPage(
                         'Politique de confidentialité',
@@ -285,7 +285,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     _ElementMenu(
-                    icone: FontAwesomeIcons.headset,
+                      icone: FontAwesomeIcons.headset,
                       titre: 'Support et assistance',
                       onTap: () => _ouvrirPage(
                         'Support et assistance',

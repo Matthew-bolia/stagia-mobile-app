@@ -1,3 +1,4 @@
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/network/client_api_http.dart';
 import '../../../../core/network/source_etudiant_distante.dart';
@@ -7,7 +8,8 @@ import '../../../../core/mocks/depot_mock_etudiant.dart';
 import '../widgets/section_rapport.dart';
 
 class JournalPage extends StatefulWidget {
-  const JournalPage({super.key});
+  const JournalPage({this.estActif = true, super.key});
+  final bool estActif;
   @override
   State<JournalPage> createState() => _JournalPageState();
 }
@@ -22,7 +24,7 @@ class _JournalPageState extends State<JournalPage>
   @override
   void initState() {
     super.initState();
-    _onglets = TabController(length: 4, vsync: this);
+    _onglets = TabController(length: 3, vsync: this);
     _onglets.addListener(() {
       if (!_onglets.indexIsChanging && mounted) {
         setState(() => _indexOnglet = _onglets.index);
@@ -31,11 +33,8 @@ class _JournalPageState extends State<JournalPage>
     _chargement = _charger();
   }
 
-  Future<List<Map<String, dynamic>>> _charger() => Future.wait([
-    _source.journal(),
-    _source.presences(),
-    _source.evaluations(),
-  ]);
+  Future<List<Map<String, dynamic>>> _charger() =>
+      Future.wait([_source.journal(), _source.evaluations()]);
 
   Future<void> _actualiser() async {
     final futur = _charger();
@@ -53,7 +52,20 @@ class _JournalPageState extends State<JournalPage>
     await _actualiser();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Activité soumise pour vérification.')),
+      const SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF1A7F37),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+        content: Row(
+          children: [
+            FaIcon(FontAwesomeIcons.circleCheck, color: Colors.white, size: 24),
+          ],
+        ),
+      ),
     );
   }
 
@@ -65,40 +77,53 @@ class _JournalPageState extends State<JournalPage>
       showDragHandle: true,
       builder: (sheetContext) => DraggableScrollableSheet(
         expand: false,
-        initialChildSize: .78,
-        minChildSize: .45,
+        initialChildSize: .82,
+        minChildSize: .5,
         maxChildSize: .94,
         builder: (_, controleur) => ListView(
           controller: controleur,
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           children: [
             const Text(
-              'Détail du brouillon',
+              'Détail du journal',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 18),
-            _LigneDetail('Intitulé', activite['learning']),
-            _LigneDetail('Date', activite['date']),
-            _LigneDetail('Service ou unité', activite['unit']?['name']),
-            _LigneDetail('Durée', '${activite['duration'] ?? '-'} heure(s)'),
-            _LigneDetail(
-              'Catégorie',
-              _items(activite['activities']).isEmpty
-                  ? '-'
-                  : _items(activite['activities']).first['category'],
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _LigneDetail('Titre de l’activité', activite['learning']),
+                  _LigneDetail('Date', _formatDateDetail(activite['date'])),
+                  _LigneDetail('Service ou unité', activite['unit']?['name']),
+                  _LigneDetail(
+                    'Durée',
+                    '${activite['duration'] ?? '-'} ${activite['duration'] == null ? '' : 'heure(s)'}',
+                  ),
+                  _LigneDetail(
+                    'Catégorie',
+                    _items(activite['activities']).isEmpty
+                        ? '-'
+                        : _items(activite['activities']).first['category'],
+                  ),
+                  _LigneDetail('Travail réalisé', activite['summary']),
+                  _LigneDetail('Compétences travaillées', activite['skills']),
+                  _LigneDetail('Difficultés', activite['difficulties']),
+                ],
+              ),
             ),
-            _LigneDetail('Travail réalisé', activite['summary']),
-            _LigneDetail('Objectifs', activite['objectives']),
-            _LigneDetail('Compétences', activite['skills']),
-            _LigneDetail('Résultats', activite['results']),
-            _LigneDetail('Difficultés', activite['difficulties']),
             const SizedBox(height: 18),
             FilledButton(
               onPressed: () {
                 Navigator.pop(sheetContext);
                 _ajouterActivite(activite);
               },
-              child: const Text('Modifier le brouillon'),
+              child: const Text('Modifier le journal'),
             ),
             const SizedBox(height: 10),
             OutlinedButton(
@@ -106,7 +131,7 @@ class _JournalPageState extends State<JournalPage>
                 Navigator.pop(sheetContext);
                 _soumettreBrouillon(activite);
               },
-              child: const Text('Soumettre le brouillon'),
+              child: const Text('Soumettre le journal'),
             ),
           ],
         ),
@@ -133,8 +158,8 @@ class _JournalPageState extends State<JournalPage>
     );
     final date = TextEditingController(
       text:
-          activite?['date']?.toString() ??
-          DateTime.now().toIso8601String().split('T').first,
+          _formatDateChamps(activite?['date']?.toString()) ??
+          _formatDateChamps(DateTime.now().toIso8601String()),
     );
     final categorie = TextEditingController(
       text: activites.isEmpty ? '' : activites.first['category']?.toString(),
@@ -221,23 +246,33 @@ class _JournalPageState extends State<JournalPage>
                       TextFormField(
                         controller: date,
                         readOnly: true,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Date de l’activité',
-                          suffixIcon: Icon(Icons.calendar_month_outlined),
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: FaIcon(
+                              FontAwesomeIcons.calendarDays,
+                              size: 26,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                         onTap: () async {
                           final choix = await showDatePicker(
                             context: context,
                             firstDate: DateTime(2020),
                             lastDate: DateTime.now(),
-                            initialDate:
-                                DateTime.tryParse(date.text) ?? DateTime.now(),
+                            initialDate: _dateDepuisChamps(date.text),
                           );
-                          if (choix != null)
-                            date.text = choix
-                                .toIso8601String()
-                                .split('T')
-                                .first;
+                          if (choix != null) {
+                            date.text =
+                                (_formatDateChamps(choix.toIso8601String()) ??
+                                _formatDateChamps(
+                                  DateTime.now().toIso8601String(),
+                                ))!;
+                          }
                         },
                       ),
                       const SizedBox(height: 12),
@@ -275,7 +310,7 @@ class _JournalPageState extends State<JournalPage>
                       TextFormField(
                         controller: service,
                         decoration: const InputDecoration(
-                          labelText: 'Service ou unité',
+                          labelText: 'Service affecté',
                         ),
                         validator: (v) => (v?.trim().isEmpty ?? true)
                             ? 'Champ obligatoire'
@@ -287,19 +322,13 @@ class _JournalPageState extends State<JournalPage>
                         minLines: 3,
                         maxLines: 5,
                         decoration: const InputDecoration(
-                          labelText: 'Travail réalisé',
+                          labelText: 'Activité réalisée',
                         ),
                         validator: (v) => (v?.trim().isEmpty ?? true)
                             ? 'Champ obligatoire'
                             : null,
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: objectifs,
-                        decoration: const InputDecoration(
-                          labelText: 'Objectifs concernés',
-                        ),
-                      ),
+                      //
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: competences,
@@ -307,13 +336,7 @@ class _JournalPageState extends State<JournalPage>
                           labelText: 'Compétences travaillées',
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: resultats,
-                        decoration: const InputDecoration(
-                          labelText: 'Résultats obtenus',
-                        ),
-                      ),
+                      //
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: difficulte,
@@ -348,7 +371,7 @@ class _JournalPageState extends State<JournalPage>
                               categorie: donnees.categorie,
                               duree: donnees.duree,
                               service: donnees.service,
-                              objectifs: donnees.objectifs,
+                              objectif: donnees.objectifs,
                               competences: donnees.competences,
                               resultats: donnees.resultats,
                             );
@@ -371,7 +394,7 @@ class _JournalPageState extends State<JournalPage>
                         },
                         child: Text(
                           activite == null
-                              ? 'Enregistrer le brouillon'
+                              ? 'Enregistrer le journal'
                               : 'Enregistrer les modifications',
                         ),
                       ),
@@ -393,7 +416,26 @@ class _JournalPageState extends State<JournalPage>
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Activité enregistrée dans le journal.')),
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF1A7F37),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          content: Row(
+            children: [
+              FaIcon(
+                FontAwesomeIcons.circleCheck,
+                color: Colors.white,
+                size: 24,
+              ),
+              SizedBox(width: 12),
+              Text('Activité enregistrée dans le journal.'),
+            ],
+          ),
+        ),
       );
     }
   }
@@ -409,7 +451,6 @@ class _JournalPageState extends State<JournalPage>
         tabs: const [
           Tab(text: 'Journal'),
           Tab(text: 'Rapport'),
-          Tab(text: 'Présences'),
           Tab(text: 'Évaluations'),
         ],
       ),
@@ -446,11 +487,6 @@ class _JournalPageState extends State<JournalPage>
               const SectionRapport(),
               _ListeApi(
                 items: _items(data[1]['items']),
-                vide: 'Aucune présence enregistrée.',
-                constructeur: (item) => _presence(context, item),
-              ),
-              _ListeApi(
-                items: _items(data[2]['items']),
                 vide: 'Aucune évaluation disponible.',
                 constructeur: (item) => _evaluation(context, item),
               ),
@@ -459,7 +495,7 @@ class _JournalPageState extends State<JournalPage>
         },
       ),
     ),
-    floatingActionButton: _indexOnglet == 0
+    floatingActionButton: widget.estActif && _indexOnglet == 0
         ? FloatingActionButton(
             onPressed: _ajouterActivite,
             backgroundColor: Colors.black,
@@ -467,7 +503,7 @@ class _JournalPageState extends State<JournalPage>
             elevation: 6,
             shape: const CircleBorder(side: BorderSide(color: Colors.black)),
             tooltip: 'Ajouter une activité',
-            child: const Icon(Icons.add_rounded),
+            child: const FaIcon(FontAwesomeIcons.plus, size: 20),
           )
         : null,
     floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -499,8 +535,8 @@ class _ListeApi extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.inbox_outlined,
+              FaIcon(
+                FontAwesomeIcons.inbox,
                 size: 42,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -578,7 +614,7 @@ Widget _journal(
         builder: (dialogContext) => AlertDialog(
           title: const Text('Supprimer ce brouillon ?'),
           content: const Text(
-            'Cette action supprimera définitivement cette activité locale.',
+            'Cette action supprimera définitivement cette activité.',
           ),
           actions: [
             TextButton(
@@ -603,8 +639,8 @@ Widget _journal(
             color: Color(0xFFD92D20),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.delete_outline,
+          child: const FaIcon(
+            FontAwesomeIcons.trash,
             color: Colors.white,
             size: 25,
           ),
@@ -631,8 +667,7 @@ Widget _journal(
                     children: [
                       Expanded(
                         child: Text(
-                          item['learning']?.toString() ??
-                              'Brouillon sans intitulé',
+                          item['learning']?.toString() ?? 'Journal intitulé',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -652,7 +687,7 @@ Widget _journal(
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
-                          'BROUILLON',
+                          'Journal',
                           style: TextStyle(
                             color: Color(0xFFE85D00),
                             fontSize: 11,
@@ -741,26 +776,6 @@ Widget _journal(
   );
 }
 
-Widget _presence(BuildContext context, Map<String, dynamic> item) => Card(
-  color: Theme.of(context).colorScheme.surfaceContainerLow,
-  surfaceTintColor: Colors.transparent,
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-  child: ListTile(
-    leading: const CircleAvatar(
-      backgroundColor: Color(0xFFFFE3D1),
-      child: Icon(Icons.fact_check_outlined, color: Color(0xFFE85D00)),
-    ),
-    title: Text(
-      '${item['date'] ?? '-'} · ${item['status'] ?? ''}',
-      style: const TextStyle(fontWeight: FontWeight.w900),
-    ),
-    subtitle: Text(
-      'Arrivée ${item['arrival_time'] ?? '-'} · Départ ${item['departure_time'] ?? '-'}\n${item['hospital']?['name'] ?? ''}',
-    ),
-    isThreeLine: true,
-  ),
-);
-
 Widget _evaluation(BuildContext context, Map<String, dynamic> item) => Card(
   color: Theme.of(context).colorScheme.surfaceContainerLow,
   surfaceTintColor: Colors.transparent,
@@ -803,6 +818,36 @@ Widget _evaluation(BuildContext context, Map<String, dynamic> item) => Card(
 List<Map<String, dynamic>> _items(Object? valeur) => valeur is List
     ? valeur.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList()
     : <Map<String, dynamic>>[];
+
+String? _formatDateChamps(Object? valeur) {
+  final date = DateTime.tryParse(valeur?.toString() ?? '');
+  if (date == null) return null;
+  final jour = date.day.toString().padLeft(2, '0');
+  final mois = date.month.toString().padLeft(2, '0');
+  final annee = (date.year % 100).toString().padLeft(2, '0');
+  return '$jour-$mois-$annee';
+}
+
+String _formatDateDetail(Object? valeur) {
+  return _formatDateChamps(valeur) ?? '-';
+}
+
+DateTime _dateDepuisChamps(String? valeur) {
+  final date = DateTime.tryParse(valeur?.toString() ?? '');
+  if (date != null) return date;
+
+  final parts = (valeur ?? '').split('-');
+  if (parts.length == 3) {
+    final jour = int.tryParse(parts[0]);
+    final mois = int.tryParse(parts[1]);
+    final annee = int.tryParse(parts[2]);
+    if (jour != null && mois != null && annee != null) {
+      return DateTime(2000 + annee, mois, jour);
+    }
+  }
+
+  return DateTime.now();
+}
 
 String _dateCourte(Object? valeur) {
   final date = DateTime.tryParse(valeur?.toString() ?? '');

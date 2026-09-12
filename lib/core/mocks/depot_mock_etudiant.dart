@@ -78,8 +78,8 @@ abstract final class DepotMockEtudiant {
     required String categorie,
     required String duree,
     required String service,
-    required String objectifs,
     required String competences,
+    required String objectif,
     required String resultats,
   }) {
     _journal.insert(0, <String, dynamic>{
@@ -91,9 +91,7 @@ abstract final class DepotMockEtudiant {
       'learning': titre,
       'difficulties': difficulte,
       'duration': duree,
-      'objectives': objectifs,
       'skills': competences,
-      'results': resultats,
       'campaign': {'title': 'Stage professionnel 2026-2027'},
       'hospital': {'name': 'Cliniques Universitaires de Kinshasa'},
       'unit': {'name': service},

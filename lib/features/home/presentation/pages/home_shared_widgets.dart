@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../../core/services/photo_profil_service.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
+import '../../../messagerie/presentation/messages_page.dart';
 
 class EnTeteAccueil extends StatelessWidget implements PreferredSizeWidget {
-  const EnTeteAccueil({required this.etudiant, super.key});
+  const EnTeteAccueil({required this.etudiant, this.superviseur, super.key});
 
   final Map<String, dynamic> etudiant;
+  final Map<String, String>? superviseur;
 
   @override
   Size get preferredSize => const Size.fromHeight(76);
@@ -40,10 +43,10 @@ class EnTeteAccueil extends StatelessWidget implements PreferredSizeWidget {
                     : const Color(0xFFE5E7EB),
                 backgroundImage: photoValide ? FileImage(File(photo)) : null,
                 child: !photoValide
-                    ? Icon(
-                        Icons.person_rounded,
-                        color: modeSombre ? Colors.white : Colors.black,
-                        size: 30,
+                    ? const FaIcon(
+                        FontAwesomeIcons.user,
+                        color: Color(0xFF9CA3AF),
+                        size: 24,
                       )
                     : null,
               );
@@ -59,13 +62,40 @@ class EnTeteAccueil extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           IconButton(
+            tooltip: 'Messages',
+            onPressed: () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute<void>(
+                builder: (_) => MessagesPage(
+                  compte:
+                      (etudiant['uuid'] ??
+                              etudiant['stagia_code'] ??
+                              etudiant['matricule'] ??
+                              etudiant['email'] ??
+                              'local')
+                          .toString(),
+                  superviseurId: superviseur?['id'],
+                  superviseurNom: superviseur?['nom'],
+                ),
+              ),
+            ),
+            icon: FaIcon(
+              FontAwesomeIcons.message,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            iconSize: 20,
+          ),
+          IconButton(
             tooltip: 'Notifications',
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute<void>(
                 builder: (_) => const NotificationsPage(),
               ),
             ),
-            icon: const Icon(Icons.notifications_none_rounded),
+            icon: FaIcon(
+              FontAwesomeIcons.bell,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            iconSize: 20,
           ),
         ],
       ),
@@ -83,10 +113,10 @@ class ErreurAccueil extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
-          Icons.cloud_off_outlined,
-          size: 48,
-          color: Color(0xFFFF7417),
+        const FaIcon(
+          FontAwesomeIcons.cloudArrowDown,
+          color: Color(0xFF718096),
+          size: 40,
         ),
         const SizedBox(height: 12),
         const Text('Impossible de charger les données.'),

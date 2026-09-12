@@ -13,15 +13,13 @@ class StagiaApp extends StatelessWidget {
       value: PreferencesApplicationService.instance,
       child: Consumer<PreferencesApplicationService>(
         builder: (context, preferences, _) => MaterialApp(
-        title: 'STAGIA',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: preferences.modeSombre
-            ? ThemeMode.dark
-            : ThemeMode.light,
-        initialRoute: RoutesApplication.demarrage,
-        onGenerateRoute: RoutesApplication.generer,
+          title: 'STAGIA',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: preferences.modeSombre ? ThemeMode.dark : ThemeMode.light,
+          initialRoute: RoutesApplication.demarrage,
+          onGenerateRoute: RoutesApplication.generer,
         ),
       ),
     );

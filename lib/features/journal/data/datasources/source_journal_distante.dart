@@ -11,13 +11,30 @@ class SourceJournalDistante {
     required String date,
     required String titre,
     required String description,
+    String? categorie,
+    String? duree,
+    String? service,
+    String? objectifs,
+    String? competences,
+    String? resultats,
+    String? difficultes,
   }) => _client.post(
     EndpointsApi.ajouterActivite(stageId),
     corps: {
-      'assignment_id': ?affectationId,
+      if (affectationId != null && affectationId.isNotEmpty)
+        'assignment_id': affectationId,
       'activity_date': date,
       'title': titre,
       'description': description,
+      if (categorie != null && categorie.isNotEmpty) 'category': categorie,
+      if (duree != null && duree.isNotEmpty) 'duration': duree,
+      if (service != null && service.isNotEmpty) 'service_unit': service,
+      if (objectifs != null && objectifs.isNotEmpty) 'objectives': objectifs,
+      if (competences != null && competences.isNotEmpty)
+        'skills': competences,
+      if (resultats != null && resultats.isNotEmpty) 'results': resultats,
+      if (difficultes != null && difficultes.isNotEmpty)
+        'difficulties': difficultes,
     },
   );
 

@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../../core/mocks/depot_mock_etudiant.dart';
 import '../../../../core/widgets/contenu_adaptatif.dart';
 import '../routes/routes_stage.dart';
@@ -29,8 +30,9 @@ class _EtatParcours extends State<ParcoursCandidaturePage> {
       type: FileType.custom,
       allowedExtensions: const ['pdf', 'doc', 'docx', 'excel', 'xlsx'],
     );
-    if (mounted && resultat.isNotEmpty)
+    if (mounted && resultat.isNotEmpty) {
       setState(() => _document = resultat.first);
+    }
   }
 
   void _continuer() {
@@ -76,11 +78,7 @@ class _EtatParcours extends State<ParcoursCandidaturePage> {
 
   Widget _eligibilite() => Column(
     children: [
-      const Icon(
-        Icons.verified_user_outlined,
-        size: 72,
-        color: Color(0xFFFF7417),
-      ),
+      FaIcon(FontAwesomeIcons.circleCheck, size: 72, color: Color(0xFFFF7417)),
       const SizedBox(height: 14),
       const Text(
         'Vous êtes éligible',
